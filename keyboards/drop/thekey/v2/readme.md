@@ -92,5 +92,5 @@ qmk compile -kb <keyboard> -km <keymap>
 qmk flash -kb <keyboard> -km <keymap>
 ```
 
-*Note*: Tested with QMK Firmware 0.21.7. May require adjustments for different RGB implementations or keyboard models.
+*Note*: Tested with QMK Firmware 0.21.12. May require adjustments for different RGB implementations or keyboard models.
 

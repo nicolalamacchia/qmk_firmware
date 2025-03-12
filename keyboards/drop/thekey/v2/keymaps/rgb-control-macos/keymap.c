@@ -15,17 +15,21 @@ enum custom_keycodes {
 
 #define LAYER2_HUE 50
 #define LAYER2_SAT 255
+#define LAYER2_VAL_MIN 10 // Starting brightness
 #define LAYER2_VAL_MAX 64 // Maximum brightness
-#define LAYER2_VAL_MIN 10 // Minimum brightness
 
 #define LAYER2_TIMEOUT 1000 // 1 second timeout
+#define MIN_BLINK_INTERVAL 20
+#define MAX_BLINK_INTERVAL 100
 
 static uint8_t  current_layer      = 0;
 static uint32_t layer2_timer       = 0;
 static bool     layer2_key_pressed = false;
-static bool     layer2_ramping     = false;
+static bool     layer2_active      = false;
+static bool     blink_state        = false;
+static uint32_t last_blink_toggle  = 0;
 
-const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {[0] = LAYOUT(LAYER_SWITCH, KC_VOLU, KC_VOLD), [1] = LAYOUT(LAYER_SWITCH, KC_MPRV, KC_MNXT), [2] = LAYOUT(LAYER_SWITCH, KC_MPLY, KC_MSTP)};
+const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {[0] = LAYOUT(LAYER_SWITCH, KC_VOLD, KC_VOLU), [1] = LAYOUT(LAYER_SWITCH, KC_MPRV, KC_MNXT), [2] = LAYOUT(LAYER_SWITCH, KC_MPLY, KC_MSTP)};
 
 void update_layer_rgb(uint8_t layer) {
     switch (layer) {
@@ -36,34 +40,45 @@ void update_layer_rgb(uint8_t layer) {
             rgblight_sethsv_noeeprom(LAYER1_HUE, LAYER1_SAT, LAYER1_VAL);
             break;
         case 2:
-            // Set color but don't override current brightness if ramping
-            if (!layer2_ramping) {
-                rgblight_sethsv_noeeprom(LAYER2_HUE, LAYER2_SAT, LAYER2_VAL_MAX);
-            }
+            // Base color will be managed by the effect system
             break;
     }
 }
 
 void matrix_scan_user(void) {
-    if (layer2_ramping) {
+    if (layer2_active) {
         const uint32_t now     = timer_read32();
         const uint32_t elapsed = now - layer2_timer;
 
-        if (elapsed >= LAYER2_TIMEOUT) {
-            // Timeout reached - set to max brightness
-            layer2_ramping = false;
+        if (elapsed >= LAYER2_TIMEOUT || layer2_key_pressed) {
+            // Timeout reached - solid maximum brightness
+            layer2_active = false;
             rgblight_sethsv_noeeprom(LAYER2_HUE, LAYER2_SAT, LAYER2_VAL_MAX);
             return;
         }
 
-        // Calculate current brightness (linear interpolation)
-        uint8_t val = LAYER2_VAL_MIN + (LAYER2_VAL_MAX - LAYER2_VAL_MIN) * elapsed / LAYER2_TIMEOUT;
+        // Calculate current brightness
+        uint8_t brightness = LAYER2_VAL_MIN + (LAYER2_VAL_MAX - LAYER2_VAL_MIN) * elapsed / LAYER2_TIMEOUT;
+        brightness         = brightness > LAYER2_VAL_MAX ? LAYER2_VAL_MAX : brightness;
 
-        // Ensure we don't exceed max value
-        val = val > LAYER2_VAL_MAX ? LAYER2_VAL_MAX : val;
+        // Calculate dynamic blink interval
+        uint16_t interval = MAX_BLINK_INTERVAL - (elapsed * (MAX_BLINK_INTERVAL - MIN_BLINK_INTERVAL) / LAYER2_TIMEOUT);
+        interval          = interval < MIN_BLINK_INTERVAL ? MIN_BLINK_INTERVAL : interval;
 
-        // Update brightness
-        rgblight_sethsv_noeeprom(LAYER2_HUE, LAYER2_SAT, val);
+        // Handle blinking
+        if ((now - last_blink_toggle) >= interval) {
+            blink_state       = !blink_state;
+            last_blink_toggle = now;
+        }
+
+        // Update LEDs
+        if (blink_state) {
+            // rgblight_sethsv_noeeprom(LAYER2_HUE, LAYER2_SAT, brightness);
+            rgblight_sethsv_noeeprom(LAYER2_HUE, LAYER2_SAT, LAYER2_VAL_MAX);
+        } else {
+            // rgblight_sethsv_noeeprom(LAYER1_HUE, LAYER1_SAT, 0);
+            rgblight_sethsv_noeeprom(LAYER1_HUE, LAYER1_SAT, LAYER1_VAL);
+        }
     }
 }
 
@@ -79,16 +94,17 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case LAYER_SWITCH:
             if (record->event.pressed) {
                 if (current_layer == 1) {
-                    // Activate Layer 2 with brightness ramp
+                    // Activate Layer 2 with combined effect
                     layer_on(2);
                     current_layer      = 2;
                     layer2_timer       = timer_read32();
-                    layer2_ramping     = true;
+                    layer2_active      = true;
                     layer2_key_pressed = false;
-                    // Start at minimum brightness
+                    blink_state        = true;
+                    last_blink_toggle  = layer2_timer;
                     rgblight_sethsv_noeeprom(LAYER2_HUE, LAYER2_SAT, LAYER2_VAL_MIN);
                 }
-            } else { // Release handling
+            } else {
                 if (current_layer == 2) {
                     layer_off(2);
                     const uint32_t held_duration = timer_elapsed32(layer2_timer);
@@ -98,14 +114,13 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                         layer_off(1);
                         current_layer = 0;
                         layer_on(0);
-                        update_layer_rgb(0);
                     } else {
                         // Long hold or keypress: return to Layer 1
                         current_layer = 1;
                         layer_on(1);
-                        update_layer_rgb(1);
                     }
-                    layer2_ramping = false;
+                    layer2_active = false;
+                    update_layer_rgb(current_layer);
                 } else {
                     // Normal layer toggle
                     layer_off(current_layer);
