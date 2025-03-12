@@ -1,49 +1,15 @@
 #include QMK_KEYBOARD_H
 
-#define BL 0
-#define FN 1
-/*
- * Default HHKB Layout
- */
+#if __has_include("keymap.h")
+#    include "keymap.h"
+#endif
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
-    /* 0: Default layer
-┌─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┐
-│ Esc │  1  │  2  │  3  │  4  │  5  │  6  │  7  │  8  │  9  │  0  │  -  │  =  │  \  │  `  │
-├─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┤
-│ Tab │  Q  │  W  │  E  │  R  │  T  │  Y  │  U  │  I  │  O  │  P  │  [  │  ]  │BkSpc│█████│
-├─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┤
-│Ctrl │  A  │  S  │  D  │  F  │  G  │  H  │  J  │  K  │  L  │  ;  │  '  │█████│Enter│█████│
-├─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┤
-│Shift│█████│  Z  │  X  │  C  │  V  │  B  │  N  │  M  │  ,  │  .  │  /  │█████│Shift│ Fn  │
-├─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┤
-│█████│ Alt │ Gui │█████│█████│Space│█████│█████│█████│█████│█████│ Gui │ Alt │█████│█████│
-└─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┘
-     */
-[BL] = LAYOUT_60_hhkb(
-        KC_ESC,    KC_1,    KC_2,   KC_3,   KC_4,   KC_5,   KC_6,   KC_7,   KC_8,    KC_9,    KC_0, KC_MINS,  KC_EQL, KC_BSLS, KC_GRV,
-        KC_TAB,    KC_Q,    KC_W,   KC_E,   KC_R,   KC_T,   KC_Y,   KC_U,   KC_I,    KC_O,    KC_P, KC_LBRC, KC_RBRC, KC_BSPC,
-        KC_LCTL,   KC_A,    KC_S,   KC_D,   KC_F,   KC_G,   KC_H,   KC_J,   KC_K,    KC_L,    KC_SCLN, KC_QUOT,       KC_ENT,
-        KC_LSFT,            KC_Z,   KC_X,   KC_C,   KC_V,   KC_B,   KC_N,   KC_M, KC_COMM,  KC_DOT, KC_SLSH,      KC_RSFT, MO(FN),
-             KC_LALT, KC_LGUI,              KC_SPC,                         KC_RGUI, KC_RALT ),
-    /* 1: HHKB Fn layer
-┌─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┐
-│ Pwr │ F1  │ F2  │ F3  │ F4  │ F5  │ F6  │ F7  │ F8  │ F9  │ F10 │ F11 │ F12 │ Ins │ Del │
-├─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┤
-│Caps │ RGB │RGBfw│RGBrv│BLtog│BLstp│     │     │ Psc │ Slk │ Pus │ Up  │     │     │█████│
-├─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┤
-│     │ VoD │ VoU │ Mut │ Ejc │     │NP_* │NP_/ │Home │PgUp │Left │Right│█████│NPEnt│█████│
-├─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┤
-│     │█████│     │     │     │     │     │NP_+ │NP_- │ End │PgDwn│Down │█████│     │     │
-├─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┤
-│█████│     │     │█████│█████│█████│     │█████│█████│█████│█████│     │     │█████│█████│
-└─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┘
-     */
-[FN]= LAYOUT_60_hhkb(
-       KC_PWR,   KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,  KC_F10,  KC_F11,  KC_F12,  KC_INS,  KC_DEL,
-       KC_CAPS, UG_TOGG, UG_NEXT, UG_PREV,  BL_TOGG, BL_STEP, KC_TRNS, KC_TRNS, KC_PSCR, KC_SCRL, KC_PAUS,   KC_UP, KC_TRNS, KC_TRNS,
-       KC_TRNS, KC_VOLD, KC_VOLU, KC_MUTE, KC_EJCT, KC_TRNS, KC_PAST, KC_PSLS, KC_HOME, KC_PGUP, KC_LEFT, KC_RGHT,       KC_PENT,
-       KC_TRNS,       KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_PPLS, KC_PMNS,  KC_END, KC_PGDN, KC_DOWN,       KC_TRNS, KC_TRNS,
-             KC_TRNS, KC_TRNS,                   KC_TRNS,                         KC_TRNS, KC_TRNS ),
+    [0] = LAYOUT_60_hhkb(KC_ESC, KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_7, KC_8, KC_9, KC_0, KC_MINS, KC_EQL, KC_BSLS, KC_GRV, KC_TAB, KC_Q, KC_W, KC_E, KC_R, KC_T, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_LBRC, KC_RBRC, KC_BSPC, LCTL_T(KC_ESC), KC_A, KC_S, KC_D, KC_F, KC_G, KC_H, KC_J, KC_K, KC_L, KC_SCLN, KC_QUOT, KC_ENT, KC_LSFT, KC_Z, KC_X, KC_C, KC_V, KC_B, KC_N, KC_M, KC_COMM, KC_DOT, KC_SLSH, KC_RSFT, MO(1), KC_LALT, KC_LGUI, KC_SPC, KC_RGUI, KC_RALT),
+    [1] = LAYOUT_60_hhkb(KC_SLEP, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_F11, KC_F12, KC_INS, KC_DEL, KC_CAPS, RGB_TOG, RGB_MOD, RGB_RMOD, BL_TOGG, BL_STEP, KC_BRID, KC_BRIU, KC_PSCR, KC_SCRL, KC_PAUS, KC_UP, KC_EJCT, MO(2), KC_TRNS, KC_VOLD, KC_VOLU, KC_MUTE, KC_MPLY, KC_MSTP, KC_MPRV, KC_MNXT, KC_HOME, KC_PGUP, KC_LEFT, KC_RGHT, KC_PENT, KC_TRNS, KC_MRWD, KC_MPLY, KC_MFFD, KC_WBAK, KC_WFWD, KC_MRWD, KC_MFFD, KC_END, KC_PGDN, KC_DOWN, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS),
+    [2] = LAYOUT_60_hhkb(KC_PWR, KC_F13, KC_F14, KC_F15, KC_F16, KC_F17, KC_F18, KC_F19, KC_F20, KC_F21, KC_F22, KC_F23, KC_F24, DB_TOGG, KC_WAKE, QK_BOOT, BL_UP, RGB_VAI, RGB_SAI, RGB_HUI, BL_ON, GU_ON, MS_BTN5, MS_BTN4, MS_WHLU, MS_BTN1, MS_UP, MS_BTN2, KC_TRNS, CW_TOGG, BL_DOWN, RGB_VAD, RGB_SAD, RGB_HUD, BL_OFF, GU_OFF, MS_ACL0, MS_WHLL, MS_WHLR, MS_LEFT, MS_RGHT, KC_EXEC, NK_TOGG, DM_REC1, DM_PLY1, DM_REC2, DM_PLY2, QK_MACRO_0, MS_ACL1, MS_ACL2, MS_WHLD, MS_BTN3, MS_DOWN, DM_RSTP, KC_NO, KC_NO, KC_NO, KC_FIND, KC_NO, KC_NO)
 };
 
-
+#ifdef OTHER_KEYMAP_C
+#    include OTHER_KEYMAP_C
+#endif // OTHER_KEYMAP_C
